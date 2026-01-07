@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: ledger-core
+
+  # Conexión a Base de Datos
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ledger_db
+    username: admin
+    password: admin
+    driver-class-name: org.postgresql.Driver
+
+  # Configuración JPA (Hibernate)
+  jpa:
+    hibernate:
+      ddl-auto: update # Crea las tablas automáticamente
+    show-sql: true     # Ver las queries en la consola
+    properties:
+      hibernate:
+        format_sql: true
+
+# Configuración de Swagger (Documentación)
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+  api-docs:
+    path: /v3/api-docs
