@@ -1,13 +1,14 @@
 package com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence;
 
 import com.raulparamio.smarttransaction.ledger.domain.model.Account;
-import com.raulparamio.smarttransaction.ledger.domain.port.output.AccountRepositoryPort;
+import com.raulparamio.smarttransaction.ledger.application.port.output.AccountRepositoryPort;
 import com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.entity.AccountEntity;
 import com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.mapper.AccountMapper;
 import com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.repository.JpaAccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,6 +39,13 @@ public class AccountPersistenceAdapter implements AccountRepositoryPort {
     public Optional<Account> findById(UUID id) {
         return jpaAccountRepository.findById(id)
                 .map(accountMapper::toDomain);
+    }
+
+    @Override
+    public List<Account> findAll() {
+        return jpaAccountRepository.findAll().stream()
+                .map(accountMapper::toDomain)
+                .toList();
     }
 
     @Override

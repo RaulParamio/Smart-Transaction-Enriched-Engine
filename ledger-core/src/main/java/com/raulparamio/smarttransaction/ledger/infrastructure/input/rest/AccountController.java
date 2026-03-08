@@ -1,13 +1,15 @@
 package com.raulparamio.smarttransaction.ledger.infrastructure.input.rest;
 
 import com.raulparamio.smarttransaction.ledger.domain.model.Account;
-import com.raulparamio.smarttransaction.ledger.domain.port.input.CreateAccountUseCase;
-import com.raulparamio.smarttransaction.ledger.domain.port.input.FindAccountUseCase;
+import com.raulparamio.smarttransaction.ledger.application.port.input.CreateAccountUseCase;
+import com.raulparamio.smarttransaction.ledger.application.port.input.DeleteAccountUseCase;
+import com.raulparamio.smarttransaction.ledger.application.port.input.FindAccountUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -17,6 +19,7 @@ public class AccountController {
 
     private final CreateAccountUseCase createAccountUseCase;
     private final FindAccountUseCase findAccountUseCase;
+    private final DeleteAccountUseCase deleteAccountUseCase;
 
     @PostMapping
     public ResponseEntity<Account> createAccount(@RequestBody Account account) {
@@ -32,15 +35,24 @@ public class AccountController {
 
     @GetMapping("/id/{id}")
     public ResponseEntity<Account> getAccountById(@PathVariable UUID id) {
-        return findAccountUseCase.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        Account account = findAccountUseCase.findById(id);
+        return ResponseEntity.ok(account);
     }
 
+    @GetMapping
+    public ResponseEntity<List<Account>> getAllAccounts() {
+        List<Account> accounts = findAccountUseCase.execute();
+
+        if (accounts.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(accounts);
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAccount(@PathVariable UUID id) {
-        findAccountUseCase.deleteById(id);
+        deleteAccountUseCase.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 }

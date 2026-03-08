@@ -22,7 +22,7 @@ public class Account {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // --- LÓGICA DE NEGOCIO (El corazón de la Arquitectura Hexagonal) ---
+
 
     public boolean hasEnoughBalance(BigDecimal amount) {
         // Devuelve true si el saldo es mayor o igual a la cantidad
