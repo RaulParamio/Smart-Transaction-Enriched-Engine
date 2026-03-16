@@ -1,8 +1,13 @@
 package com.raulparamio.smarttransaction.ledger.application.port.input;
 
-import java.math.BigDecimal;
-import java.util.UUID;
+import com.raulparamio.smarttransaction.ledger.application.port.input.dto.TransactionCreateDTO;
+import org.springframework.transaction.annotation.Transactional;
+
+
 
 public interface ProcessTransactionUseCase {
-    void execute(UUID accountId, BigDecimal amount, String description);
+    @Transactional
+    void execute(TransactionCreateDTO command);
+
+
 }

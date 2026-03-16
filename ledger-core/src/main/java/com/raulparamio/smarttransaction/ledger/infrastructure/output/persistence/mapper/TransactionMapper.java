@@ -1,7 +1,11 @@
 package com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.mapper;
 
+import com.raulparamio.smarttransaction.ledger.application.port.input.dto.TransactionCreateDTO;
+import com.raulparamio.smarttransaction.ledger.application.port.input.dto.TransactionResponseDTO;
 import com.raulparamio.smarttransaction.ledger.domain.model.Transaction;
+import com.raulparamio.smarttransaction.ledger.domain.model.TransactionAnalysis;
 import com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.entity.AccountEntity;
+import com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.entity.TransactionAnalysisEntity;
 import com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.entity.TransactionEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -19,4 +23,26 @@ public interface TransactionMapper {
     // Pasamos de Entidad a Dominio
     @Mapping(target = "accountId", source = "entity.account.id")
     Transaction toDomain(TransactionEntity entity);
+
+    // Ignoramos el ID y la fecha porque se generarán en la base de datos
+    @Mapping(target = "transactionId", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    Transaction toDomain(TransactionCreateDTO dto);
+
+    // 2. Mapeo para la tabla de IA (Entidad -> Dominio)
+    TransactionAnalysis toAnalysisDomain(TransactionAnalysisEntity entity);
+
+    @Mapping(target = "transactionId", source = "domain.transactionId")
+
+    @Mapping(target = "transaction", ignore = true)
+    TransactionAnalysisEntity toAnalysisEntity(TransactionAnalysis domain);
+
+    // 3. El "Fusionador" (Multi-source mapping)
+    // Combinamos los dos objetos de dominio en el DTO de salida
+    @Mapping(target = "transactionId", source = "transaction.transactionId")
+    @Mapping(target = "aiJustification", source = "analysis.justification")
+    TransactionResponseDTO toResponseDTO(Transaction transaction, TransactionAnalysis analysis);
 }
+
+
+

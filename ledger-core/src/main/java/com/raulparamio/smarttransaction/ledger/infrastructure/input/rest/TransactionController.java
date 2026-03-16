@@ -1,14 +1,16 @@
 package com.raulparamio.smarttransaction.ledger.infrastructure.input.rest;
 
+import com.raulparamio.smarttransaction.ledger.application.port.input.FindTransactionUseCase;
 import com.raulparamio.smarttransaction.ledger.application.port.input.ProcessTransactionUseCase;
-import com.raulparamio.smarttransaction.ledger.domain.model.Transaction;
+import com.raulparamio.smarttransaction.ledger.application.port.input.dto.TransactionCreateDTO;
+import com.raulparamio.smarttransaction.ledger.application.port.input.dto.TransactionResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
 
 
 @RestController
@@ -17,18 +19,22 @@ import org.springframework.web.bind.annotation.RestController;
 public class TransactionController {
 
     private final ProcessTransactionUseCase processTransactionUseCase;
-    // Aquí podrías añadir un FindTransactionUseCase más adelante para los GET
+    private final FindTransactionUseCase findTransactionUseCase;
+
 
     @PostMapping
-    public ResponseEntity<String> createTransaction(@RequestBody Transaction request) {
-        // Ejecuta el flujo: Validar cuenta -> Restar Saldo -> Guardar Transacción
-        processTransactionUseCase.execute(
-                request.getAccountId(),
-                request.getAmount(),
-                request.getDescription()
-        );
+    public ResponseEntity<Void> createTransaction(@RequestBody TransactionCreateDTO createDto) {
+        // El controlador recibe el DTO minimalista
+        processTransactionUseCase.execute(createDto);
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Transacción registrada correctamente y saldo actualizado.");
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+
+
+    @GetMapping
+    public ResponseEntity<List<TransactionResponseDTO>> getTransactions(@RequestParam UUID accountId) {
+        List<TransactionResponseDTO> transactions = findTransactionUseCase.getTransactionsByAccountId(accountId);
+        return ResponseEntity.ok(transactions);
     }
 }

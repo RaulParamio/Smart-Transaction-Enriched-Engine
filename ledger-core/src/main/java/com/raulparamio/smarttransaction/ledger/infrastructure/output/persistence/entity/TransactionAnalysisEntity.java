@@ -11,11 +11,11 @@ import java.util.UUID;
 @Data
 public class TransactionAnalysisEntity {
     @Id
+    @Column(name = "transaction_id")
     private UUID transactionId;
 
     @OneToOne
-    @MapsId
-    @JoinColumn(name = "transaction_id")
+    @JoinColumn(name = "transaction_id", insertable = false, updatable = false)
     private TransactionEntity transaction;
 
     private String cleanDescription;
