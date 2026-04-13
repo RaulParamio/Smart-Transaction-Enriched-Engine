@@ -14,43 +14,46 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface TransactionMapper {
 
-    // Pasamos de Dominio a Entidad
-    // Usamos @Mapping para decirle que el objeto AccountEntity completo va al campo 'account'
+    // =====================================================================
+    // 1. MAPEOS DE LA TRANSACCIÓN FINANCIERA (CORE)
+    // =====================================================================
+
     @Mapping(target = "account", source = "accountEntity")
     @Mapping(target = "transactionId", source = "domain.transactionId")
     @Mapping(target = "createdAt", source = "domain.createdAt")
     TransactionEntity toEntity(Transaction domain, AccountEntity accountEntity);
 
-    // Pasamos de Entidad a Dominio
     @Mapping(target = "accountId", source = "entity.account.id")
     Transaction toDomain(TransactionEntity entity);
 
-    // Ignoramos el ID y la fecha porque se generarán en la base de datos
     @Mapping(target = "transactionId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     Transaction toDomain(TransactionCreateDTO dto);
 
-    // 2. Mapeo para la tabla de IA (Entidad -> Dominio)
+
+    // =====================================================================
+    // 2. MAPEOS DEL ANÁLISIS DE IA
+    // =====================================================================
+
     TransactionAnalysis toAnalysisDomain(TransactionAnalysisEntity entity);
 
-    @Mapping(target = "transactionId", source = "domain.transactionId")
-
+    // He arreglado el salto de línea que tenías aquí.
+    // MapStruct es lo bastante listo para mapear transactionId automáticamente si se llaman igual,
+    // pero si la Entidad tiene una relación @OneToOne (campo 'transaction'), lo ignoramos aquí.
     @Mapping(target = "transaction", ignore = true)
     TransactionAnalysisEntity toAnalysisEntity(TransactionAnalysis domain);
 
-    // 3. El "Fusionador" (Multi-source mapping)
-    // Combinamos los dos objetos de dominio en el DTO de salida
+
+    // =====================================================================
+    // 3. EL "FUSIONADOR" (RESPUESTAS HACIA EL FRONTEND )
+    // =====================================================================
+
     @Mapping(target = "transactionId", source = "transaction.transactionId")
     @Mapping(target = "aiJustification", source = "analysis.justification")
     TransactionResponseDTO toResponseDTO(Transaction transaction, TransactionAnalysis analysis);
 
-
     @Mapping(target = "transactionId", source = "tx.transactionId")
     @Mapping(target = "aiJustification", source = "analysis.justification")
     @Mapping(target = "cleanDescription", source = "analysis.cleanDescription")
-// Los campos con el mismo nombre (amount, category, etc.) se mapean solos
     TransactionDetailResponseDTO toDetailDTO(Transaction tx, TransactionAnalysis analysis);
 }
-
-
-

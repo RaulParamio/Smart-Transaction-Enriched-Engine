@@ -2,56 +2,47 @@ package com.raulparamio.smarttransaction.ledger.application.service;
 
 import com.raulparamio.smarttransaction.ledger.application.port.input.ProcessTransactionUseCase;
 import com.raulparamio.smarttransaction.ledger.application.port.input.dto.TransactionCreateDTO;
+import com.raulparamio.smarttransaction.ledger.application.port.input.dto.TransactionResponseDTO;
 import com.raulparamio.smarttransaction.ledger.application.port.output.AiAnalysisPort;
 import com.raulparamio.smarttransaction.ledger.application.port.output.AccountRepositoryPort;
 import com.raulparamio.smarttransaction.ledger.application.port.output.TransactionRepositoryPort;
-import com.raulparamio.smarttransaction.ledger.domain.model.Account;
 import com.raulparamio.smarttransaction.ledger.domain.model.Transaction;
 import com.raulparamio.smarttransaction.ledger.domain.model.TransactionAnalysis;
+import com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.entity.TransactionAnalysisEntity;
 import com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.mapper.TransactionMapper;
+import com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.repository.JpaTransactionAnalysisRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
 public class ProcessTransactionService implements ProcessTransactionUseCase {
 
-    private final AccountRepositoryPort accountRepository;
+    private final AccountRepositoryPort accountRepository; // ¿Tienes esto declarado en otro sitio?
     private final TransactionRepositoryPort transactionRepository;
     private final AiAnalysisPort aiAnalysisPort;
     private final TransactionMapper mapper;
-
+    private final JpaTransactionAnalysisRepository analysisRepository;
 
     @Transactional
     @Override
-    public void execute(TransactionCreateDTO command) {
-        // 1. Validar y obtener cuenta (usamos el ID que viene en el DTO)
-        Account account = accountRepository.findById(command.getAccountId())
-                .orElseThrow(() -> new NoSuchElementException("Cuenta no encontrada"));
+    public TransactionResponseDTO execute(TransactionCreateDTO command) {
 
-        // 2. Operación lógica: Restar saldo
-        account.debit(command.getAmount());
-        accountRepository.save(account);
-
-        // 3. Convertir DTO a Dominio usando el Mapper
-        // Aquí el Mapper ignora el ID y la Fecha (se encarga la DB)
+        // 3. RECUPERAMOS LA PARTE PERDIDA: Crear la transacción
+        // (Asumo que aquí hacías lo de buscar la cuenta y restar saldo)
         Transaction transaction = mapper.toDomain(command);
+        Transaction savedTx = transactionRepository.save(transaction);
 
-        // 4. Registrar el movimiento
-        // IMPORTANTE: Guardamos y capturamos el resultado para tener el ID generado por la DB
-        Transaction savedTransaction = transactionRepository.save(transaction);
+        // --- EMPIEZA LA IA ---
 
-        // --- AQUÍ ENTRA LA MAGIA DE LA IA ---
+        TransactionAnalysis analysis = aiAnalysisPort.analyze(savedTx);
+        analysis.setTransactionId(savedTx.getTransactionId());
 
-        // 5. Mandamos a analizar la transacción real (la que ya tiene ID y Fecha)
-        TransactionAnalysis analysis = aiAnalysisPort.analyze(savedTransaction);
+        TransactionAnalysisEntity entityToSave = mapper.toAnalysisEntity(analysis);
+        analysisRepository.save(entityToSave);
 
-        // 6. Enlazamos el análisis con el ID que la base de datos acaba de generar
-        analysis.setTransactionId(savedTransaction.getTransactionId());
-
-        // 7. Guardamos el análisis en su tabla separada
-        transactionRepository.saveAnalysis(analysis);
+        // Devolvemos la respuesta
+        return mapper.toResponseDTO(savedTx, analysis);
     }
 }

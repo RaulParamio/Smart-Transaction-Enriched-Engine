@@ -1,4 +1,5 @@
 services:
+  # Tu base de datos actual
   postgres-db:
     image: postgres:16
     container_name: stee-postgres
@@ -11,5 +12,42 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  # El motor de IA
+  ollama:
+    image: ollama/ollama:latest
+    container_name: stee-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  # Este contenedor solo sirve para descargar el modelo y luego se apaga
+  ollama-model-pull:
+    image: curlimages/curl:latest
+    container_name: stee-ollama-pull
+    depends_on:
+      - ollama
+    # Envía una orden a ollama para que descargue llama3
+    entrypoint: [ "curl", "-f", "http://ollama:11434/api/pull", "-d", "{\"name\": \"llama3\"}" ]
+
+  # Tu aplicación Spring Boot
+  ledger-app:
+    build: . # Busca el archivo Dockerfile en la raíz de tu proyecto
+    container_name: stee-ledger-app
+    ports:
+      - "8080:8080"
+    environment:
+      # IMPORTANTE: Usamos el nombre del servicio 'postgres-db' y 'ollama' en lugar de localhost
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/ledger_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_AI_OLLAMA_BASE_URL=http://ollama:11434
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+
 volumes:
   postgres_data:
+  ollama_data: # Para no tener que bajar la IA cada vez que borres el contenedor

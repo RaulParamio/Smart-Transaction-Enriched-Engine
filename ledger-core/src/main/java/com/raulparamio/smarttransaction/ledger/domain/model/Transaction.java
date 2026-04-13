@@ -19,4 +19,15 @@ public class Transaction {
     private BigDecimal amount;
     private String description;
     private LocalDateTime createdAt;
+
+
+    // 1. AÑADIMOS SOLO EL ESTADO FINANCIERO
+    private String status; // Ej: "COMPLETED", "REJECTED_BY_AI", "PENDING"
+
+    // 2. EL MÉTODO AHORA ES MÁS SIMPLE (No sabe nada de la IA)
+    public void markAsSuspicious() {
+        this.status = "REJECTED_BY_AI"; // Cambiamos el estado para bloquear el dinero
+    }
+
 }
+

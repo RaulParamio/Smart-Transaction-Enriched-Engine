@@ -17,4 +17,5 @@ public class TransactionAnalysis {
     private String category;
     private BigDecimal fraudScore;
     private String justification;
+
 }

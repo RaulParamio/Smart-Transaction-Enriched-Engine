@@ -2,23 +2,35 @@ spring:
   application:
     name: ledger-core
 
-  # Conexión a Base de Datos
+  # Conexión a Base de Datos (Flexible para Docker e IDE)
   datasource:
-    url: jdbc:postgresql://localhost:5432/ledger_db
-    username: admin
-    password: admin
+    # Si existe la variable SPRING_DATASOURCE_URL la usa; si no, usa localhost
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ledger_db}
+    username: ${SPRING_DATASOURCE_USERNAME:admin}
+    password: ${SPRING_DATASOURCE_PASSWORD:admin}
     driver-class-name: org.postgresql.Driver
 
   # Configuración JPA (Hibernate)
   jpa:
     hibernate:
-      ddl-auto: update # Crea las tablas automáticamente
-    show-sql: true     # Ver las queries en la consola
+      ddl-auto: update
+    show-sql: true
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
-# Configuración de Swagger (Documentación)
+  # Configuración de Inteligencia Artificial (Ollama)
+  ai:
+    ollama:
+      # En Docker usará 'http://ollama:11434', en tu PC 'http://localhost:11434'
+      base-url: ${SPRING_AI_OLLAMA_BASE_URL:http://localhost:11434}
+      chat:
+        options:
+          model: llama3
+          temperature: 0.7
+
+# Configuración de Swagger
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
