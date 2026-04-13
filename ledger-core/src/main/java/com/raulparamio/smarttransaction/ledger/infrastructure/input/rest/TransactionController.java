@@ -2,8 +2,7 @@ package com.raulparamio.smarttransaction.ledger.infrastructure.input.rest;
 
 import com.raulparamio.smarttransaction.ledger.application.port.input.FindTransactionUseCase;
 import com.raulparamio.smarttransaction.ledger.application.port.input.ProcessTransactionUseCase;
-import com.raulparamio.smarttransaction.ledger.application.port.input.dto.TransactionCreateDTO;
-import com.raulparamio.smarttransaction.ledger.application.port.input.dto.TransactionResponseDTO;
+import com.raulparamio.smarttransaction.ledger.application.port.input.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,4 +36,21 @@ public class TransactionController {
         List<TransactionResponseDTO> transactions = findTransactionUseCase.getTransactionsByAccountId(accountId);
         return ResponseEntity.ok(transactions);
     }
+
+
+    @GetMapping("/{transactionId}")
+    public ResponseEntity<TransactionDetailResponseDTO> getTransactionDetail(@PathVariable UUID transactionId) {
+        return ResponseEntity.ok(findTransactionUseCase.getTransactionDetail(transactionId));
+    }
+
+    @GetMapping("/stats/{accountId}")
+    public ResponseEntity<List<CategoryStatDTO>> getStats(@PathVariable UUID accountId) {
+        return ResponseEntity.ok(findTransactionUseCase.getSpendingStatsByAccount(accountId));
+    }
+
+    @GetMapping("/admin/alerts")
+    public ResponseEntity<List<TransactionAlertDTO>> getAlerts() {
+        return ResponseEntity.ok(findTransactionUseCase.getFraudAlerts());
+    }
+
 }

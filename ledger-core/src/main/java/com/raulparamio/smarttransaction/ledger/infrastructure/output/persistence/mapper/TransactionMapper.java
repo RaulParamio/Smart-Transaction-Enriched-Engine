@@ -1,6 +1,7 @@
 package com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.mapper;
 
 import com.raulparamio.smarttransaction.ledger.application.port.input.dto.TransactionCreateDTO;
+import com.raulparamio.smarttransaction.ledger.application.port.input.dto.TransactionDetailResponseDTO;
 import com.raulparamio.smarttransaction.ledger.application.port.input.dto.TransactionResponseDTO;
 import com.raulparamio.smarttransaction.ledger.domain.model.Transaction;
 import com.raulparamio.smarttransaction.ledger.domain.model.TransactionAnalysis;
@@ -42,6 +43,13 @@ public interface TransactionMapper {
     @Mapping(target = "transactionId", source = "transaction.transactionId")
     @Mapping(target = "aiJustification", source = "analysis.justification")
     TransactionResponseDTO toResponseDTO(Transaction transaction, TransactionAnalysis analysis);
+
+
+    @Mapping(target = "transactionId", source = "tx.transactionId")
+    @Mapping(target = "aiJustification", source = "analysis.justification")
+    @Mapping(target = "cleanDescription", source = "analysis.cleanDescription")
+// Los campos con el mismo nombre (amount, category, etc.) se mapean solos
+    TransactionDetailResponseDTO toDetailDTO(Transaction tx, TransactionAnalysis analysis);
 }
 
 

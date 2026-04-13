@@ -1,5 +1,7 @@
 package com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence;
 
+import com.raulparamio.smarttransaction.ledger.application.port.input.dto.CategoryStatDTO;
+import com.raulparamio.smarttransaction.ledger.application.port.input.dto.TransactionAlertDTO;
 import com.raulparamio.smarttransaction.ledger.application.port.output.TransactionRepositoryPort;
 import com.raulparamio.smarttransaction.ledger.domain.model.Transaction;
 import com.raulparamio.smarttransaction.ledger.domain.model.TransactionAnalysis;
@@ -14,7 +16,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 
@@ -62,6 +66,32 @@ public class TransactionPersistenceAdapter implements TransactionRepositoryPort 
         return transactionRepository.findByAccount_Id(accountId).stream()
                 .map(transactionMapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    public Optional<Transaction> findById(UUID id) {
+        // 1. Buscamos en la tabla de transacciones usando el JpaRepository
+        // 2. Si lo encuentra, usamos el mapper para pasar de Entity a Domain
+        return transactionRepository.findById(id)
+                .map(transactionMapper::toDomain);
+    }
+
+    @Override
+    public Optional<TransactionAnalysis> findAnalysisById(UUID id) {
+        // 1. Buscamos en la tabla de análisis
+        // 2. Usamos el mapper específico para análisis
+        return analysisRepository.findById(id)
+                .map(transactionMapper::toAnalysisDomain);
+    }
+
+    @Override
+    public List<CategoryStatDTO> getStatsByAccountId(UUID accountId) {
+        return transactionRepository.findSpendingStats(accountId);
+    }
+
+    @Override
+    public List<TransactionAlertDTO> findHighRiskTransactions(BigDecimal threshold) {
+        return transactionRepository.findHighRiskTransactions(threshold);
     }
 }
 

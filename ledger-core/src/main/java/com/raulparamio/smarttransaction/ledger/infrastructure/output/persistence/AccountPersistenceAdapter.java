@@ -29,6 +29,12 @@ public class AccountPersistenceAdapter implements AccountRepositoryPort {
         return accountMapper.toDomain(savedEntity);
     }
 
+
+    @Override
+    public boolean existsById(UUID id) {
+        return jpaAccountRepository.existsById(id);
+    }
+
     @Override
     public Optional<Account> findByIban(String iban) {
         return jpaAccountRepository.findByIban(iban)

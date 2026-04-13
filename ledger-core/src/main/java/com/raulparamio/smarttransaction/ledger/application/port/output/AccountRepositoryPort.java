@@ -11,4 +11,5 @@ public interface AccountRepositoryPort {
     Optional<Account> findById(UUID id);
     void deleteById(UUID id);
     List<Account> findAll();
+    boolean existsById(UUID id);
 }
