@@ -5,7 +5,6 @@ import com.raulparamio.smarttransaction.ledger.application.port.input.dto.Transa
 import com.raulparamio.smarttransaction.ledger.application.port.output.TransactionRepositoryPort;
 import com.raulparamio.smarttransaction.ledger.domain.model.Transaction;
 import com.raulparamio.smarttransaction.ledger.domain.model.TransactionAnalysis;
-import com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.entity.AccountEntity;
 import com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.entity.TransactionAnalysisEntity;
 import com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.entity.TransactionEntity;
 import com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.mapper.TransactionMapper;
@@ -34,18 +33,14 @@ public class TransactionPersistenceAdapter implements TransactionRepositoryPort 
 
     @Override
     public Transaction save(Transaction domainTx) {
-        // 1. Recuperamos la entidad de la cuenta
-        AccountEntity accountEntity = accountRepository.findById(domainTx.getAccountId())
-                .orElseThrow(() -> new RuntimeException("Cuenta no encontrada"));
+        // 1. Convertimos de Dominio a Entidad directamente
+        // Ahora que TransactionEntity usa UUIDs, no necesitamos buscar la AccountEntity primero
+        TransactionEntity entity = transactionMapper.toEntity(domainTx);
 
-        // 2. MapStruct convierte de Dominio a Entidad
-        TransactionEntity entity = transactionMapper.toEntity(domainTx, accountEntity);
-
-        // 3. Persistimos y capturamos la entidad resultante
-        // ¡Aquí es donde JPA rellena el ID y la Fecha automáticamente!
+        // 2. Persistimos en la base de datos
         TransactionEntity savedEntity = transactionRepository.save(entity);
 
-        // 4. Mapeamos la entidad "enriquecida" de vuelta al modelo de Dominio
+        // 3. Devolvemos al Dominio con el ID generado por la DB
         return transactionMapper.toDomain(savedEntity);
     }
 
@@ -60,10 +55,14 @@ public class TransactionPersistenceAdapter implements TransactionRepositoryPort 
         log.info("Análisis guardado correctamente para la transacción: {}", domainAnalysis.getTransactionId());
     }
 
+
     @Override
-    public List<Transaction> findByAccountId(UUID accountId) {
-        // Buscamos las entidades en la base de datos y las convertimos a dominio
-        return transactionRepository.findByAccount_Id(accountId).stream()
+    public List<Transaction> findAllByAccountId(UUID accountId) {
+        // 1. Llamamos al nuevo métiodo del repositorio que busca en Origen O Destino
+        List<TransactionEntity> entities = transactionRepository.findAllByAccountId(accountId);
+
+        // 2. Convertimos la lista de entidades a lista de objetos de dominio
+        return entities.stream()
                 .map(transactionMapper::toDomain)
                 .toList();
     }

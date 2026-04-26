@@ -3,6 +3,7 @@ package com.raulparamio.smarttransaction.ledger.infrastructure.input.rest;
 import com.raulparamio.smarttransaction.ledger.application.port.input.FindTransactionUseCase;
 import com.raulparamio.smarttransaction.ledger.application.port.input.ProcessTransactionUseCase;
 import com.raulparamio.smarttransaction.ledger.application.port.input.dto.*;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,18 +16,28 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/v1/transactions")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class TransactionController {
 
+    // Asegúrate de que estos nombres coincidan con tus @Service o @Component
     private final ProcessTransactionUseCase processTransactionUseCase;
     private final FindTransactionUseCase findTransactionUseCase;
 
+    @PostMapping("/card")
+    public ResponseEntity<TransactionResponseDTO> receiveCardPayment(@Valid @RequestBody CardPaymentDTO dto) {
+        return ResponseEntity.ok(processTransactionUseCase.processCardPayment(dto));
+    }
 
-    @PostMapping
-    public ResponseEntity<Void> createTransaction(@RequestBody TransactionCreateDTO createDto) {
-        // El controlador recibe el DTO minimalista
-        processTransactionUseCase.execute(createDto);
+    @PostMapping("/bizum")
+    public ResponseEntity<TransactionResponseDTO> receiveBizum(@Valid @RequestBody BizumDTO request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(processTransactionUseCase.processBizum(request));
+    }
 
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    @PostMapping("/transfer")
+    public ResponseEntity<TransactionResponseDTO> receiveTransfer(@Valid @RequestBody SepaTransferDTO request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(processTransactionUseCase.processTransfer(request));
     }
 
 

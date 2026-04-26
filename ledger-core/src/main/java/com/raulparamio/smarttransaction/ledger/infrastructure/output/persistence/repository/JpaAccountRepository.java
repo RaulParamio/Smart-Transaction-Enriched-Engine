@@ -7,4 +7,5 @@ import java.util.UUID;
 
 public interface JpaAccountRepository extends JpaRepository<AccountEntity, UUID> {
     Optional<AccountEntity> findByIban(String iban);
+    Optional<AccountEntity> findByPhoneNumber(String phoneNumber);
 }

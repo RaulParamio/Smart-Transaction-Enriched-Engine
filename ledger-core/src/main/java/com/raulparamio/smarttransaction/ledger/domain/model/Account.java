@@ -1,5 +1,7 @@
 package com.raulparamio.smarttransaction.ledger.domain.model;
 
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,13 +18,16 @@ import java.util.UUID;
 public class Account {
     private UUID id;
     private String iban;
+    private String ownerName;
     private BigDecimal balance;
     private String currency;
     private AccountStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String phoneNumber; // Para Bizum (opcional en empresas)
 
-
+    @Enumerated(EnumType.STRING)
+    private AccountType accountType;
 
     public boolean hasEnoughBalance(BigDecimal amount) {
         // Devuelve true si el saldo es mayor o igual a la cantidad

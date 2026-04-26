@@ -5,55 +5,57 @@ import com.raulparamio.smarttransaction.ledger.application.port.input.dto.Transa
 import com.raulparamio.smarttransaction.ledger.application.port.input.dto.TransactionResponseDTO;
 import com.raulparamio.smarttransaction.ledger.domain.model.Transaction;
 import com.raulparamio.smarttransaction.ledger.domain.model.TransactionAnalysis;
-import com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.entity.AccountEntity;
 import com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.entity.TransactionAnalysisEntity;
 import com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.entity.TransactionEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.math.BigDecimal;
+
 @Mapper(componentModel = "spring")
 public interface TransactionMapper {
 
-    // =====================================================================
-    // 1. MAPEOS DE LA TRANSACCIÓN FINANCIERA (CORE)
-    // =====================================================================
+    // 1. Core: Ahora que ambos se llaman transactionId, no hace falta @Mapping manual
+    TransactionEntity toEntity(Transaction domain);
 
-    @Mapping(target = "account", source = "accountEntity")
-    @Mapping(target = "transactionId", source = "domain.transactionId")
-    @Mapping(target = "createdAt", source = "domain.createdAt")
-    TransactionEntity toEntity(Transaction domain, AccountEntity accountEntity);
-
-    @Mapping(target = "accountId", source = "entity.account.id")
     Transaction toDomain(TransactionEntity entity);
 
+    // 2. Entrada DTO -> Dominio
     @Mapping(target = "transactionId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "sourceAccountId", source = "accountId")
+    @Mapping(target = "status", ignore = true) // Ignoramos porque el dominio lo pone a PENDING por defecto
+    @Mapping(target = "type", ignore = true) // Se asigna en el Service según el método
+    @Mapping(target = "reference", ignore = true)
     Transaction toDomain(TransactionCreateDTO dto);
 
+    // En TransactionMapper.java
 
-    // =====================================================================
-    // 2. MAPEOS DEL ANÁLISIS DE IA
-    // =====================================================================
+    @Mapping(target = "transactionId", source = "transaction.transactionId") // Cambiado 'tx' por 'transaction'
+    @Mapping(target = "aiJustification", source = "analysis.justification")
+    @Mapping(target = "cleanDescription", source = "analysis.cleanDescription")
+// Si el DTO tiene campos que se llaman igual en 'transaction', MapStruct los mapeará solo
+    TransactionDetailResponseDTO toDetailDTO(Transaction transaction, TransactionAnalysis analysis);
 
+    // 3. IA y Respuestas
     TransactionAnalysis toAnalysisDomain(TransactionAnalysisEntity entity);
 
-    // He arreglado el salto de línea que tenías aquí.
-    // MapStruct es lo bastante listo para mapear transactionId automáticamente si se llaman igual,
-    // pero si la Entidad tiene una relación @OneToOne (campo 'transaction'), lo ignoramos aquí.
     @Mapping(target = "transaction", ignore = true)
     TransactionAnalysisEntity toAnalysisEntity(TransactionAnalysis domain);
 
-
-    // =====================================================================
-    // 3. EL "FUSIONADOR" (RESPUESTAS HACIA EL FRONTEND )
-    // =====================================================================
-
-    @Mapping(target = "transactionId", source = "transaction.transactionId")
-    @Mapping(target = "aiJustification", source = "analysis.justification")
-    TransactionResponseDTO toResponseDTO(Transaction transaction, TransactionAnalysis analysis);
-
     @Mapping(target = "transactionId", source = "tx.transactionId")
+    @Mapping(target = "amount", source = "tx.amount")
+    @Mapping(target = "description", source = "tx.description")
+    @Mapping(target = "createdAt", source = "tx.createdAt")
+    // Campos que vienen del Análisis de IA
+    @Mapping(target = "category", source = "analysis.category")
     @Mapping(target = "aiJustification", source = "analysis.justification")
-    @Mapping(target = "cleanDescription", source = "analysis.cleanDescription")
-    TransactionDetailResponseDTO toDetailDTO(Transaction tx, TransactionAnalysis analysis);
+    // El porcentaje SOLO para el fraudScore
+    @Mapping(target = "fraudScore", expression = "java(formatPercentage(analysis.getFraudScore()))")
+    TransactionResponseDTO toResponseDTO(Transaction tx, TransactionAnalysis analysis);
+
+    default String formatPercentage(BigDecimal score) {
+        if (score == null) return "0%";
+        return (int)(score.doubleValue() * 100) + "%";
+    }
 }

@@ -13,7 +13,7 @@ import java.util.UUID;
 public interface TransactionRepositoryPort {
     Transaction save(Transaction transaction);
     void saveAnalysis(TransactionAnalysis analysis);
-    List<Transaction> findByAccountId(UUID accountId);
+    List<Transaction> findAllByAccountId(UUID accountId);
     Optional<Transaction> findById(UUID id);
     Optional<TransactionAnalysis> findAnalysisById(UUID id);
     List<CategoryStatDTO> getStatsByAccountId(UUID accountId);

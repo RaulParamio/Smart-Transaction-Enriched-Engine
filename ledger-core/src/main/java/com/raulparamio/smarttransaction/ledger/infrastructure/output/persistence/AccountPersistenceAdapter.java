@@ -48,6 +48,12 @@ public class AccountPersistenceAdapter implements AccountRepositoryPort {
     }
 
     @Override
+    public Optional<Account> findByPhoneNumber(String phoneNumber) {
+        return jpaAccountRepository.findByPhoneNumber(phoneNumber)
+                .map(accountMapper::toDomain);
+    }
+
+    @Override
     public List<Account> findAll() {
         return jpaAccountRepository.findAll().stream()
                 .map(accountMapper::toDomain)

@@ -17,9 +17,11 @@ public class TransactionEntity {
     @Column(name = "transaction_id", updatable = false, nullable = false)
     private UUID transactionId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", nullable = false)
-    private AccountEntity account;
+    @Column(name = "source_account_id", nullable = false)
+    private UUID sourceAccountId; // Quien paga
+
+    @Column(name = "destination_account_id", nullable = false)
+    private UUID destinationAccountId; // Quien recibe
 
     private BigDecimal amount;
     private String description;

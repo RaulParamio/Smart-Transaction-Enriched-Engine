@@ -32,17 +32,12 @@ public class FindTransactionService implements FindTransactionUseCase {
     @Override
     @Transactional(readOnly = true)
     public List<TransactionResponseDTO> getTransactionsByAccountId(UUID accountId) {
-
-        // 1. Recuperamos la base financiera
-        List<Transaction> transactions = transactionRepository.findByAccountId(accountId);
-
+        List<Transaction> transactions = transactionRepository.findAllByAccountId(accountId);
         // 2. Enriquecemos cada transacción con su análisis
         return transactions.stream().map(tx -> {
-            // Buscamos el análisis en la tabla de IA
-            TransactionAnalysis analysis = analysisRepository.findById(tx.getTransactionId())
-                    .map(mapper::toAnalysisDomain)
+            // Buscamos el análisis por el ID de la transacción
+            TransactionAnalysis analysis = transactionRepository.findAnalysisById(tx.getTransactionId())
                     .orElse(null);
-
             // Fusionamos usando MapStruct
             return mapper.toResponseDTO(tx, analysis);
         }).toList();

@@ -1,6 +1,7 @@
 package com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.entity;
 
 import com.raulparamio.smarttransaction.ledger.domain.model.AccountStatus;
+import com.raulparamio.smarttransaction.ledger.domain.model.AccountType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,6 +24,16 @@ public class AccountEntity {
 
     @Column(unique = true, nullable = false, length = 24)
     private String iban;
+
+    @Column(name = "owner_name", nullable = false)
+    private String ownerName;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "account_type", nullable = false)
+    private AccountType accountType;
+
+    @Column(name = "phone_number", unique = true)
+    private String phoneNumber;
 
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal balance;

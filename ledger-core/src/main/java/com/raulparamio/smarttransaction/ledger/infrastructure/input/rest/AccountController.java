@@ -1,9 +1,11 @@
 package com.raulparamio.smarttransaction.ledger.infrastructure.input.rest;
 
+import com.raulparamio.smarttransaction.ledger.application.port.input.dto.CreateAccountDTO;
 import com.raulparamio.smarttransaction.ledger.domain.model.Account;
 import com.raulparamio.smarttransaction.ledger.application.port.input.CreateAccountUseCase;
 import com.raulparamio.smarttransaction.ledger.application.port.input.DeleteAccountUseCase;
 import com.raulparamio.smarttransaction.ledger.application.port.input.FindAccountUseCase;
+import com.raulparamio.smarttransaction.ledger.infrastructure.output.persistence.mapper.AccountMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,11 +22,15 @@ public class AccountController {
     private final CreateAccountUseCase createAccountUseCase;
     private final FindAccountUseCase findAccountUseCase;
     private final DeleteAccountUseCase deleteAccountUseCase;
+    private final AccountMapper accountMapper;
 
     @PostMapping
-    public ResponseEntity<Account> createAccount(@RequestBody Account account) {
-        Account createdAccount = createAccountUseCase.createAccount(account);
-        return new ResponseEntity<>(createdAccount, HttpStatus.CREATED);
+    public ResponseEntity<Account> createAccount(@RequestBody CreateAccountDTO dto) {
+        // 2. Usamos el mapper inyectado para convertir DTO -> Dominio
+        Account accountRequest = accountMapper.toDomain(dto);
+        // 3. Llamamos al CASO DE USO (createAccountUseCase), no al servicio directamente
+        Account savedAccount = createAccountUseCase.createAccount(accountRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedAccount);
     }
 
     @GetMapping("/iban/{iban}")

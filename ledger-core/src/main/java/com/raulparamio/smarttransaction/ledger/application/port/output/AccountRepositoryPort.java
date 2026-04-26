@@ -9,6 +9,7 @@ public interface AccountRepositoryPort {
     Account save(Account account);
     Optional<Account> findByIban(String iban);
     Optional<Account> findById(UUID id);
+    Optional<Account> findByPhoneNumber(String phoneNumber);
     void deleteById(UUID id);
     List<Account> findAll();
     boolean existsById(UUID id);

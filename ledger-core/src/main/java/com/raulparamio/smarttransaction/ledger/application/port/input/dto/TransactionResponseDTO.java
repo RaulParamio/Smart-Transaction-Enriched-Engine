@@ -17,6 +17,6 @@ public class TransactionResponseDTO {
 
     // Datos de IA (Vienen de otro dominio pero se unifican aquí)
     String category;
-    Double fraudScore;
+    String fraudScore;
     String aiJustification;
 }

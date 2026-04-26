@@ -20,28 +20,38 @@ public class OllamaAiAdapter implements AiAnalysisPort {
     }
 
 
-    // 1. SYSTEM PROMPT: Definimos el comportamiento y las reglas
-        @Override
-        public TransactionAnalysis analyze(Transaction transaction) {
-            return chatClient.prompt()
-                    .system(sp -> sp.text("""
-            Eres un analista de seguridad bancaria. 
-            Tu objetivo es limpiar la descripción de la transacción y evaluar el riesgo.
-            
-            REGLAS PARA EL JSON:
-            1. 'cleanDescription': Elimina códigos numéricos o fechas (Ej: 'MER-CAD-442' -> 'Mercadona').
-            2. 'category': Elige una de [ALIMENTACION, OCIO, TRANSPORTE, SALUD, HOGAR, SUSCRIPCIONES, OTROS].
-            3. 'fraudScore': Un número decimal entre 0.0 y 1.0.
-            4. 'justification': Una frase breve explicando el riesgo.
-            
-            Responde exclusivamente en formato JSON.
-            """))
-                    .user(up -> up.text(String.format(
-                            "Analiza esta transacción: Concepto: '%s', Importe: %s€, UsuarioID: %s",
-                            transaction.getDescription(),
-                            transaction.getAmount(),
-                            transaction.getAccountId()))) // Asegúrate de que Transaction tenga getAccountId()
-                    .call()
-                    .entity(TransactionAnalysis.class); // Aquí es donde ocurre la conversión automática
-        }
+    @Override
+    public TransactionAnalysis analyze(Transaction transaction) {
+        return chatClient.prompt()
+                .system(sp -> sp.text("""
+    Eres un experto en fraude bancario. Tu misión es normalizar descripciones y evaluar riesgos.
+
+    --- IDENTIFICACIÓN DE MÉTODO (Para cleanDescription) ---
+    Analiza el campo 'Datos' y aplica este formato: "[Método] en [Comercio]"
+    
+    1. Si ves 'Mode: 05' -> "Pago con Chip en [Comercio]"
+    2. Si ves 'Mode: 07' -> "Pago Contactless en [Comercio]"
+    3. Si ves 'Mode: 81' -> "Pago Online en [Comercio]"
+    
+    Si es Bizum -> "Bizum de [Concepto]"
+    Si es Transferencia -> "Transferencia: [Concepto]"
+
+    --- REGLAS DE NEGOCIO ---
+    - 'category': [ALIMENTACION, OCIO, TRANSPORTE, SALUD, HOGAR, SUSCRIPCIONES, OTROS].
+    - 'fraudScore': Decimal de 0.0 a 1.0 (0.1 = 10%).
+    - 'justification': Frase breve con el % de riesgo. Ej: "Riesgo del 5%. Método físico seguro."
+
+    --- PRIORIDADES DE CATEGORÍA ---
+    - Mercadona, Lidl, Carrefour, UberEats -> ALIMENTACION.
+    - Netflix, Spotify, Amazon Prime, DAZN -> SUSCRIPCIONES.
+    - Renfe, Uber, Cabify, Gasolinera -> TRANSPORTE.
+    """))
+                .user(up -> up.text(String.format(
+                        "DATOS DE ENTRADA: Concepto/Descripción: '%s' | Importe: %s€ | ID Usuario: %s",
+                        transaction.getDescription(),
+                        transaction.getAmount(),
+                        transaction.getSourceAccountId())))
+                .call()
+                .entity(TransactionAnalysis.class);
+    }
 }

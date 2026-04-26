@@ -14,20 +14,24 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Transaction {
+
     private UUID transactionId;
-    private UUID accountId;
     private BigDecimal amount;
     private String description;
     private LocalDateTime createdAt;
+    private UUID destinationAccountId;
+    private UUID sourceAccountId;
 
+    //  LOS DIFERENTES PAGOS
+    private TransactionType type; // BIZUM, CARD_PAYMENT, SEPA_TRANSFER
+    private String reference;     // Guardará el teléfono, el IBAN o el ID del datáfono
 
-    // 1. AÑADIMOS SOLO EL ESTADO FINANCIERO
-    private String status; // Ej: "COMPLETED", "REJECTED_BY_AI", "PENDING"
+    // 2. INICIALIZAMOS EL ESTADO POR DEFECTO
+    @Builder.Default
+    private String status = "PENDING"; // Así toda transacción nace pendiente
 
-    // 2. EL MÉTODO AHORA ES MÁS SIMPLE (No sabe nada de la IA)
     public void markAsSuspicious() {
-        this.status = "REJECTED_BY_AI"; // Cambiamos el estado para bloquear el dinero
+        this.status = "REJECTED_BY_AI";
     }
 
 }
-
